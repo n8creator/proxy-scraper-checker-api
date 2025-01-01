@@ -36,13 +36,6 @@ _logger = logging.getLogger(__name__)
 
 
 def _get_supported_max_connections() -> int | None:
-    if sys.platform == "win32":
-        if isinstance(
-            asyncio.get_event_loop_policy(),
-            asyncio.WindowsSelectorEventLoopPolicy,
-        ):
-            return 512
-        return None
     import resource  # type: ignore[unreachable, unused-ignore]  # noqa: PLC0415
 
     soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)

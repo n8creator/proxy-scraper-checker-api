@@ -63,18 +63,6 @@ def get_async_run() -> Callable[[Coroutine[Any, Any, T]], T]:
                 uvloop.install()
                 return asyncio.run
 
-        try:
-            import winloop  # noqa: PLC0415
-        except ImportError:
-            pass
-        else:
-            try:
-                return winloop.run  # type: ignore[no-any-return, unused-ignore]
-            except AttributeError:
-                winloop.install()
-                return asyncio.run
-    if sys.platform == "win32":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     return asyncio.run
 
 
@@ -165,10 +153,6 @@ async def main() -> None:
             await asyncio.to_thread(
                 output.save_proxies, storage=storage, settings=settings
             )
-
-        _logger.info(
-            "Thank you for using https://github.com/monosans/proxy-scraper-checker"
-        )
 
 
 if __name__ == "__main__":

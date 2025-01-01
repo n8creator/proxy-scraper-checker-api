@@ -1,7 +1,7 @@
 # The number of seconds to wait for a proxied request.
 # The higher the number, the longer the check will take
 # and the more proxies you get.
-timeout = 5
+timeout = 12
 
 # The number of seconds to wait for the proxies to be downloaded from the source.
 source_timeout = 15
@@ -10,7 +10,7 @@ source_timeout = 15
 # Don't be in a hurry to set high values.
 # Make sure you have enough RAM first, gradually increasing the default value.
 # If set to 0, the maximum value available for your OS will be used.
-max_connections = 512
+max_connections = 1024
 
 # URL to which to send a request to check the proxy.
 # If it is not httpbin or a service that returns an IP address,
