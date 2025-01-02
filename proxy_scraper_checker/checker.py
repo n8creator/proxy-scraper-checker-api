@@ -21,13 +21,7 @@ _logger = logging.getLogger(__name__)
 
 
 async def check_one(
-    *,
-    counter: IncrInt,
-    progress: Progress,
-    proxy: Proxy,
-    settings: Settings,
-    storage: ProxyStorage,
-    task: TaskID,
+    *, counter: IncrInt, progress: Progress, proxy: Proxy, settings: Settings, storage: ProxyStorage, task: TaskID
 ) -> None:
     try:
         await proxy.check(settings=settings)
@@ -36,9 +30,7 @@ async def check_one(
         if isinstance(e, OSError) and e.errno == 24:  # noqa: PLR2004
             _logger.error("Please, set max_connections to lower value")
 
-        _logger.debug(
-            "%s.%s: %s", e.__class__.__module__, e.__class__.__qualname__, e
-        )
+        _logger.debug("%s.%s: %s", e.__class__.__module__, e.__class__.__qualname__, e)
         storage.remove(proxy)
     else:
         counter.incr()
@@ -46,24 +38,12 @@ async def check_one(
 
 
 async def check_all(
-    *,
-    settings: Settings,
-    storage: ProxyStorage,
-    progress: Progress,
-    proxies_count: Mapping[ProxyType, int],
+    *, settings: Settings, storage: ProxyStorage, progress: Progress, proxies_count: Mapping[ProxyType, int]
 ) -> None:
-    counters = {
-        proto: IncrInt()
-        for proto in sort.PROTOCOL_ORDER
-        if proto in storage.enabled_protocols
-    }
+    counters = {proto: IncrInt() for proto in sort.PROTOCOL_ORDER if proto in storage.enabled_protocols}
     progress_tasks = {
         proto: progress.add_task(
-            description="",
-            total=proxies_count[proto],
-            module="Checker",
-            protocol=proto.name,
-            successful_count=0,
+            description="", total=proxies_count[proto], module="Checker", protocol=proto.name, successful_count=0
         )
         for proto in counters
     }

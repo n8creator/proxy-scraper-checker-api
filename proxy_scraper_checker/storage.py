@@ -31,26 +31,13 @@ class ProxyStorage:
     def get_grouped(self) -> dict[ProxyType, tuple[Proxy, ...]]:
         key = sort.protocol_sort_key
         return {
-            **{
-                proto: ()
-                for proto in sort.PROTOCOL_ORDER
-                if proto in self.enabled_protocols
-            },
-            **{
-                proto: tuple(v)
-                for (_, proto), v in itertools.groupby(
-                    sorted(self, key=key), key=key
-                )
-            },
+            **{proto: () for proto in sort.PROTOCOL_ORDER if proto in self.enabled_protocols},
+            **{proto: tuple(v) for (_, proto), v in itertools.groupby(sorted(self, key=key), key=key)},
         }
 
     def get_count(self) -> dict[ProxyType, int]:
         return {
-            **{
-                proto: 0
-                for proto in sort.PROTOCOL_ORDER
-                if proto in self.enabled_protocols
-            },
+            **{proto: 0 for proto in sort.PROTOCOL_ORDER if proto in self.enabled_protocols},
             **Counter(proxy.protocol for proxy in self),
         }
 

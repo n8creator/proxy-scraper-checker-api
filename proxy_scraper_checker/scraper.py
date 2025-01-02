@@ -46,17 +46,9 @@ async def scrape_one(
                 content = await f.read()
             text = bytes_decode(content)
     except ClientResponseError as e:
-        _logger.warning(
-            "%s | HTTP status code %d: %s", source, e.status, e.message
-        )
+        _logger.warning("%s | HTTP status code %d: %s", source, e.status, e.message)
     except Exception as e:
-        _logger.warning(
-            "%s | %s.%s: %s",
-            source,
-            e.__class__.__module__,
-            e.__class__.__qualname__,
-            e,
-        )
+        _logger.warning("%s | %s.%s: %s", source, e.__class__.__module__, e.__class__.__qualname__, e)
     else:
         counter.incr()
         proxies = PROXY_REGEX.finditer(text)
@@ -67,9 +59,7 @@ async def scrape_one(
         else:
             for proxy in itertools.chain((proxy,), proxies):  # noqa: B020
                 try:
-                    protocol = ProxyType[
-                        proxy.group("protocol").upper().rstrip("S")
-                    ]
+                    protocol = ProxyType[proxy.group("protocol").upper().rstrip("S")]
                 except AttributeError:
                     protocol = proto
                 storage.add(
@@ -84,21 +74,11 @@ async def scrape_one(
     progress.update(task_id=task, advance=1, successful_count=counter.value)
 
 
-async def scrape_all(
-    *,
-    progress: Progress,
-    session: ClientSession,
-    settings: Settings,
-    storage: ProxyStorage,
-) -> None:
+async def scrape_all(*, progress: Progress, session: ClientSession, settings: Settings, storage: ProxyStorage) -> None:
     counters = {proto: IncrInt() for proto in settings.sources}
     progress_tasks = {
         proto: progress.add_task(
-            description="",
-            total=len(sources),
-            module="Scraper",
-            protocol=proto.name,
-            successful_count=0,
+            description="", total=len(sources), module="Scraper", protocol=proto.name, successful_count=0
         )
         for proto, sources in settings.sources.items()
     }

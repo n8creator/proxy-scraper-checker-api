@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from io import StringIO
 from time import perf_counter
 from typing import TYPE_CHECKING
@@ -25,14 +26,7 @@ if TYPE_CHECKING:
     from proxy_scraper_checker.settings import Settings
 
 
-@attrs.define(
-    repr=False,
-    unsafe_hash=True,
-    weakref_slot=False,
-    kw_only=True,
-    getstate_setstate=False,
-    match_args=False,
-)
+@attrs.define(repr=False, unsafe_hash=True, weakref_slot=False, kw_only=True, getstate_setstate=False, match_args=False)
 class Proxy:
     protocol: ProxyType
     host: str
@@ -41,6 +35,7 @@ class Proxy:
     password: str | None
     timeout: float | None = attrs.field(default=None, init=False, eq=False)
     exit_ip: str | None = attrs.field(default=None, init=False, eq=False)
+    last_checked: datetime | None = attrs.field(default=None, init=False, eq=False)
 
     @property
     def is_checked(self) -> bool:
@@ -66,24 +61,18 @@ class Proxy:
                     timeout=settings.timeout,
                     fallback_charset_resolver=fallback_charset_resolver,
                 ) as session,
-                session.get(
-                    settings.check_website,
-                    headers=settings.check_website_type.headers,
-                ) as response,
+                session.get(settings.check_website, headers=settings.check_website_type.headers) as response,
             ):
                 content = await response.read()
         self.timeout = perf_counter() - start
         if settings.check_website_type == CheckWebsiteType.HTTPBIN_IP:
-            r = json.loads(
-                get_response_text(response=response, content=content)
-            )
+            r = json.loads(get_response_text(response=response, content=content))
             self.exit_ip = parse_ipv4(r["origin"])
         elif settings.check_website_type == CheckWebsiteType.PLAIN_IP:
-            self.exit_ip = parse_ipv4(
-                get_response_text(response=response, content=content)
-            )
+            self.exit_ip = parse_ipv4(get_response_text(response=response, content=content))
         else:
             self.exit_ip = None
+        self.last_checked = datetime.now(timezone.utc)
 
     def as_str(self, *, include_protocol: bool) -> str:
         with StringIO() as buf:

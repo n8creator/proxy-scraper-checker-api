@@ -23,14 +23,11 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-def _create_proxy_list_str(
-    *, anonymous_only: bool, include_protocol: bool, proxies: Sequence[Proxy]
-) -> str:
+def _create_proxy_list_str(*, anonymous_only: bool, include_protocol: bool, proxies: Sequence[Proxy]) -> str:
     return "\n".join(
         proxy.as_str(include_protocol=include_protocol)
         for proxy in proxies
-        if not anonymous_only
-        or (proxy.exit_ip is not None and proxy.host != proxy.exit_ip)
+        if not anonymous_only or (proxy.exit_ip is not None and proxy.host != proxy.exit_ip)
     )
 
 
@@ -38,9 +35,7 @@ def save_proxies(*, settings: Settings, storage: ProxyStorage) -> None:
     if settings.output_json:
         if settings.enable_geolocation:
             fs.add_permission(GEODB_PATH, stat.S_IRUSR)
-            mmdb: maxminddb.Reader | NullContext = maxminddb.open_database(
-                GEODB_PATH
-            )
+            mmdb: maxminddb.Reader | NullContext = maxminddb.open_database(GEODB_PATH)
         else:
             mmdb = NullContext()
         with mmdb as mmdb_reader:
@@ -52,9 +47,8 @@ def save_proxies(*, settings: Settings, storage: ProxyStorage) -> None:
                     "host": proxy.host,
                     "port": proxy.port,
                     "exit_ip": proxy.exit_ip,
-                    "timeout": round(proxy.timeout, 2)
-                    if proxy.timeout is not None
-                    else None,
+                    "timeout": round(proxy.timeout, 2) if proxy.timeout is not None else None,
+                    "last_checked": proxy.last_checked.isoformat() if proxy.last_checked is not None else None,
                     "geolocation": mmdb_reader.get(proxy.exit_ip)
                     if mmdb_reader is not None and proxy.exit_ip is not None
                     else None,
@@ -67,19 +61,10 @@ def save_proxies(*, settings: Settings, storage: ProxyStorage) -> None:
             ):
                 path.unlink(missing_ok=True)
                 with path.open("w", encoding="utf-8") as f:
-                    json.dump(
-                        proxy_dicts,
-                        f,
-                        ensure_ascii=False,
-                        indent=indent,
-                        separators=separators,
-                    )
+                    json.dump(proxy_dicts, f, ensure_ascii=False, indent=indent, separators=separators)
     if settings.output_txt:
         sorted_proxies = sorted(storage, key=settings.sorting_key)
-        grouped_proxies = tuple(
-            (k, sorted(v, key=settings.sorting_key))
-            for k, v in storage.get_grouped().items()
-        )
+        grouped_proxies = tuple((k, sorted(v, key=settings.sorting_key)) for k, v in storage.get_grouped().items())
         for folder, anonymous_only in (
             (settings.output_path / "proxies", False),
             (settings.output_path / "proxies_anonymous", True),
@@ -89,27 +74,12 @@ def save_proxies(*, settings: Settings, storage: ProxyStorage) -> None:
             except FileNotFoundError:
                 pass
             folder.mkdir()
-            text = _create_proxy_list_str(
-                proxies=sorted_proxies,
-                anonymous_only=anonymous_only,
-                include_protocol=True,
-            )
+            text = _create_proxy_list_str(proxies=sorted_proxies, anonymous_only=anonymous_only, include_protocol=True)
             (folder / "all.txt").write_text(text, encoding="utf-8")
             for proto, proxies in grouped_proxies:
-                text = _create_proxy_list_str(
-                    proxies=proxies,
-                    anonymous_only=anonymous_only,
-                    include_protocol=False,
-                )
-                (folder / f"{proto.name.lower()}.txt").write_text(
-                    text, encoding="utf-8"
-                )
+                text = _create_proxy_list_str(proxies=proxies, anonymous_only=anonymous_only, include_protocol=False)
+                (folder / f"{proto.name.lower()}.txt").write_text(text, encoding="utf-8")
     if IS_DOCKER:
-        _logger.info(
-            "Proxies have been saved to ./out (%s in container)",
-            settings.output_path.absolute(),
-        )
+        _logger.info("Proxies have been saved to ./out (%s in container)", settings.output_path.absolute())
     else:
-        _logger.info(
-            "Proxies have been saved to %s", settings.output_path.absolute()
-        )
+        _logger.info("Proxies have been saved to %s", settings.output_path.absolute())

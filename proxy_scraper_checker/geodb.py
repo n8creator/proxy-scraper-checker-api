@@ -24,9 +24,7 @@ GEODB_ETAG_PATH = GEODB_PATH.with_suffix(".mmdb.etag")
 
 async def _read_etag() -> str | None:
     try:
-        await asyncio.to_thread(
-            fs.add_permission, GEODB_ETAG_PATH, stat.S_IRUSR
-        )
+        await asyncio.to_thread(fs.add_permission, GEODB_ETAG_PATH, stat.S_IRUSR)
         async with aiofiles.open(GEODB_ETAG_PATH, "rb") as etag_file:
             content = await etag_file.read()
     except FileNotFoundError:
@@ -39,21 +37,13 @@ async def _remove_etag() -> None:
 
 
 async def _save_etag(etag: str, /) -> None:
-    await asyncio.to_thread(
-        fs.add_permission, GEODB_ETAG_PATH, stat.S_IWUSR, missing_ok=True
-    )
-    async with aiofiles.open(
-        GEODB_ETAG_PATH, "w", encoding="utf-8"
-    ) as etag_file:
+    await asyncio.to_thread(fs.add_permission, GEODB_ETAG_PATH, stat.S_IWUSR, missing_ok=True)
+    async with aiofiles.open(GEODB_ETAG_PATH, "w", encoding="utf-8") as etag_file:
         await etag_file.write(etag)
 
 
-async def _save_geodb(
-    *, progress: Progress, response: ClientResponse, task: TaskID
-) -> None:
-    await asyncio.to_thread(
-        fs.add_permission, GEODB_PATH, stat.S_IWUSR, missing_ok=True
-    )
+async def _save_geodb(*, progress: Progress, response: ClientResponse, task: TaskID) -> None:
+    await asyncio.to_thread(fs.add_permission, GEODB_PATH, stat.S_IWUSR, missing_ok=True)
     async with aiofiles.open(GEODB_PATH, "wb") as geodb:
         async for chunk in response.content.iter_any():
             await geodb.write(chunk)
@@ -64,17 +54,13 @@ async def _save_geodb(
 async def download_geodb(*, progress: Progress, session: ClientSession) -> None:
     headers = (
         {hdrs.IF_NONE_MATCH: current_etag}
-        if await asyncio.to_thread(GEODB_PATH.exists)
-        and (current_etag := await _read_etag())
+        if await asyncio.to_thread(GEODB_PATH.exists) and (current_etag := await _read_etag())
         else None
     )
 
     async with session.get(GEODB_URL, headers=headers) as response:
         if response.status == 304:  # noqa: PLR2004
-            _logger.info(
-                "Latest geolocation database is already cached at %s",
-                GEODB_PATH,
-            )
+            _logger.info("Latest geolocation database is already cached at %s", GEODB_PATH)
             return
         await _save_geodb(
             progress=progress,
@@ -90,9 +76,7 @@ async def download_geodb(*, progress: Progress, session: ClientSession) -> None:
 
     if IS_DOCKER:
         _logger.info(
-            "Downloaded geolocation database to proxy_scraper_checker_cache "
-            "Docker volume (%s in container)",
-            GEODB_PATH,
+            "Downloaded geolocation database to proxy_scraper_checker_cache Docker volume (%s in container)", GEODB_PATH
         )
     else:
         _logger.info("Downloaded geolocation database to %s", GEODB_PATH)

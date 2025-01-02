@@ -16,15 +16,7 @@ from aiohttp import ClientSession, TCPConnector
 from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn
 from rich.table import Table
 
-from proxy_scraper_checker import (
-    checker,
-    geodb,
-    http,
-    output,
-    scraper,
-    sort,
-    utils,
-)
+from proxy_scraper_checker import checker, geodb, http, output, scraper, sort, utils
 from proxy_scraper_checker.settings import Settings
 from proxy_scraper_checker.storage import ProxyStorage
 
@@ -72,9 +64,7 @@ async def read_config(file: str, /) -> dict[str, Any]:
     return tomllib.loads(utils.bytes_decode(content))
 
 
-def get_summary_table(
-    *, before: Mapping[ProxyType, int], after: Mapping[ProxyType, int]
-) -> Table:
+def get_summary_table(*, before: Mapping[ProxyType, int], after: Mapping[ProxyType, int]) -> Table:
     table = Table()
     table.add_column("Protocol", style="cyan")
     table.add_column("Working", style="magenta")
@@ -83,9 +73,7 @@ def get_summary_table(
         if (total := before.get(proto)) is not None:
             working = after.get(proto, 0)
             percentage = (working / total) if total else 0
-            table.add_row(
-                proto.name, f"{working} ({percentage:.1%})", str(total)
-            )
+            table.add_row(proto.name, f"{working} ({percentage:.1%})", str(total))
     return table
 
 
@@ -113,19 +101,9 @@ async def main() -> None:
                 MofNCompleteColumn(),
                 transient=True,
             ) as progress:
-                scrape = scraper.scrape_all(
-                    progress=progress,
-                    session=session,
-                    settings=settings,
-                    storage=storage,
-                )
+                scrape = scraper.scrape_all(progress=progress, session=session, settings=settings, storage=storage)
                 await (
-                    asyncio.gather(
-                        geodb.download_geodb(
-                            progress=progress, session=session
-                        ),
-                        scrape,
-                    )
+                    asyncio.gather(geodb.download_geodb(progress=progress, session=session), scrape)
                     if settings.enable_geolocation
                     else scrape
                 )
@@ -134,25 +112,16 @@ async def main() -> None:
                 should_save = True
                 if settings.check_website:
                     await checker.check_all(
-                        settings=settings,
-                        storage=storage,
-                        progress=progress,
-                        proxies_count=count_before_checking,
+                        settings=settings, storage=storage, progress=progress, proxies_count=count_before_checking
                     )
     finally:
         if should_save:
             if settings.check_website:
                 storage.remove_unchecked()
             count_after_checking = storage.get_count()
-            rich.print(
-                get_summary_table(
-                    before=count_before_checking, after=count_after_checking
-                )
-            )
+            rich.print(get_summary_table(before=count_before_checking, after=count_after_checking))
 
-            await asyncio.to_thread(
-                output.save_proxies, storage=storage, settings=settings
-            )
+            await asyncio.to_thread(output.save_proxies, storage=storage, settings=settings)
 
 
 if __name__ == "__main__":

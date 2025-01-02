@@ -68,13 +68,10 @@ def _get_max_connections(value: int, /) -> int | None:
     if not max_supported or value <= max_supported:
         return value
     _logger.warning(
-        "max_connections value is too high for your OS. "
-        "The config value will be ignored and %d will be used.%s",
+        "max_connections value is too high for your OS. The config value will be ignored and %d will be used.%s",
         max_supported,
         " To make max_connections unlimited, install the winloop library."
-        if sys.version_info >= (3, 9)
-        and sys.platform in {"cygwin", "win32"}
-        and sys.implementation.name == "cpython"
+        if sys.version_info >= (3, 9) and sys.platform in {"cygwin", "win32"} and sys.implementation.name == "cpython"
         else "",
     )
     return max_supported
@@ -89,26 +86,15 @@ def _timeout_converter(value: float, /) -> ClientTimeout:
     return ClientTimeout(total=value, sock_connect=math.inf)
 
 
-def _sources_converter(
-    value: Mapping[ProxyType, Iterable[str] | None], /
-) -> dict[ProxyType, frozenset[str]]:
-    return {
-        proxy_type: frozenset(sources)
-        for proxy_type, sources in value.items()
-        if sources is not None
-    }
+def _sources_converter(value: Mapping[ProxyType, Iterable[str] | None], /) -> dict[ProxyType, frozenset[str]]:
+    return {proxy_type: frozenset(sources) for proxy_type, sources in value.items() if sources is not None}
 
 
 class CheckWebsiteType(enum.Enum):
     UNKNOWN = enum.auto(), False, False, None
     PLAIN_IP = enum.auto(), True, True, None
     """https://checkip.amazonaws.com"""
-    HTTPBIN_IP = (
-        enum.auto(),
-        True,
-        True,
-        MappingProxyType({hdrs.ACCEPT: "application/json"}),
-    )
+    HTTPBIN_IP = (enum.auto(), True, True, MappingProxyType({hdrs.ACCEPT: "application/json"}))
     """https://httpbin.org/ip"""
 
     def __init__(
@@ -133,9 +119,7 @@ async def _get_check_website_type_and_real_ip(
     *, check_website: str, session: ClientSession
 ) -> (
     tuple[Literal[CheckWebsiteType.UNKNOWN], None]
-    | tuple[
-        Literal[CheckWebsiteType.PLAIN_IP, CheckWebsiteType.HTTPBIN_IP], str
-    ]
+    | tuple[Literal[CheckWebsiteType.PLAIN_IP, CheckWebsiteType.HTTPBIN_IP], str]
 ):
     if not check_website:
         return CheckWebsiteType.UNKNOWN, None
@@ -168,38 +152,17 @@ async def _get_check_website_type_and_real_ip(
     return CheckWebsiteType.UNKNOWN, None
 
 
-@attrs.define(
-    repr=False,
-    weakref_slot=False,
-    kw_only=True,
-    eq=False,
-    getstate_setstate=False,
-    match_args=False,
-)
+@attrs.define(repr=False, weakref_slot=False, kw_only=True, eq=False, getstate_setstate=False, match_args=False)
 class Settings:
-    check_website: str = attrs.field(
-        validator=attrs.validators.instance_of(str)
-    )
-    check_website_type: CheckWebsiteType = attrs.field(
-        validator=attrs.validators.instance_of(CheckWebsiteType)
-    )
-    enable_geolocation: bool = attrs.field(
-        validator=attrs.validators.instance_of(bool)
-    )
-    output_json: bool = attrs.field(
-        validator=attrs.validators.instance_of(bool)
-    )
+    check_website: str = attrs.field(validator=attrs.validators.instance_of(str))
+    check_website_type: CheckWebsiteType = attrs.field(validator=attrs.validators.instance_of(CheckWebsiteType))
+    enable_geolocation: bool = attrs.field(validator=attrs.validators.instance_of(bool))
+    output_json: bool = attrs.field(validator=attrs.validators.instance_of(bool))
     output_path: Path = attrs.field(converter=Path)
     output_txt: bool = attrs.field(validator=attrs.validators.instance_of(bool))
-    real_ip: str | None = attrs.field(
-        validator=attrs.validators.optional(attrs.validators.instance_of(str))
-    )
-    semaphore: asyncio.Semaphore | NullContext = attrs.field(
-        converter=_semaphore_converter
-    )
-    sort_by_speed: bool = attrs.field(
-        validator=attrs.validators.instance_of(bool)
-    )
+    real_ip: str | None = attrs.field(validator=attrs.validators.optional(attrs.validators.instance_of(str)))
+    semaphore: asyncio.Semaphore | NullContext = attrs.field(converter=_semaphore_converter)
+    sort_by_speed: bool = attrs.field(validator=attrs.validators.instance_of(bool))
     source_timeout: float = attrs.field(validator=attrs.validators.gt(0))
     sources: dict[ProxyType, frozenset[str]] = attrs.field(
         validator=attrs.validators.and_(
@@ -210,10 +173,7 @@ class Settings:
                 attrs.validators.and_(
                     attrs.validators.min_len(1),
                     attrs.validators.deep_iterable(
-                        attrs.validators.and_(
-                            attrs.validators.instance_of(str),
-                            attrs.validators.min_len(1),
-                        )
+                        attrs.validators.and_(attrs.validators.instance_of(str), attrs.validators.min_len(1))
                     ),
                 ),
             ),
@@ -223,14 +183,8 @@ class Settings:
     timeout: ClientTimeout = attrs.field(converter=_timeout_converter)
 
     @property
-    def sorting_key(
-        self,
-    ) -> Callable[[Proxy], float] | Callable[[Proxy], tuple[int, ...]]:
-        return (
-            sort.timeout_sort_key
-            if self.sort_by_speed
-            else sort.natural_sort_key
-        )
+    def sorting_key(self) -> Callable[[Proxy], float] | Callable[[Proxy], tuple[int, ...]]:
+        return sort.timeout_sort_key if self.sort_by_speed else sort.natural_sort_key
 
     def __attrs_post_init__(self) -> None:
         if not self.output_json and not self.output_txt:
@@ -257,17 +211,13 @@ class Settings:
     ) -> None:
         if value:
             parsed_url = urlparse(value)
-            if (
-                parsed_url.scheme not in {"http", "https"}
-                or not parsed_url.netloc
-            ):
+            if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
                 msg = f"invalid check_website: {value}"
                 raise ValueError(msg)
 
             if parsed_url.scheme == "http":
                 _logger.warning(
-                    "check_website uses the http protocol. "
-                    "It is recommended to use https for correct checking."
+                    "check_website uses the http protocol. It is recommended to use https for correct checking."
                 )
 
     @timeout.validator
@@ -282,35 +232,22 @@ class Settings:
             raise ValueError(msg)
 
     @classmethod
-    async def from_mapping(
-        cls, cfg: Mapping[str, Any], /, *, session: ClientSession
-    ) -> Self:
-        output_path = (
-            platformdirs.user_data_path("proxy_scraper_checker")
-            if IS_DOCKER
-            else Path(cfg["output"]["path"])
-        )
+    async def from_mapping(cls, cfg: Mapping[str, Any], /, *, session: ClientSession) -> Self:
+        output_path = platformdirs.user_data_path("proxy_scraper_checker") if IS_DOCKER else Path(cfg["output"]["path"])
 
         output_path_future = asyncio.to_thread(
-            fs.create_or_fix_dir,
-            output_path,
-            permission=stat.S_IXUSR | stat.S_IWUSR,
+            fs.create_or_fix_dir, output_path, permission=stat.S_IXUSR | stat.S_IWUSR
         )
 
         check_website_type, real_ip = await _get_check_website_type_and_real_ip(
             check_website=cfg["check_website"], session=session
         )
 
-        enable_geolocation = (
-            cfg["enable_geolocation"]
-            and check_website_type.supports_geolocation
-        )
+        enable_geolocation = cfg["enable_geolocation"] and check_website_type.supports_geolocation
 
         if enable_geolocation:
             await asyncio.to_thread(
-                fs.create_or_fix_dir,
-                fs.CACHE_PATH,
-                permission=stat.S_IRUSR | stat.S_IXUSR | stat.S_IWUSR,
+                fs.create_or_fix_dir, fs.CACHE_PATH, permission=stat.S_IRUSR | stat.S_IXUSR | stat.S_IWUSR
             )
 
         await output_path_future
@@ -327,19 +264,9 @@ class Settings:
             sort_by_speed=cfg["sort_by_speed"],
             source_timeout=cfg["source_timeout"],
             sources={
-                ProxyType.HTTP: (
-                    cfg["http"]["sources"] if cfg["http"]["enabled"] else None
-                ),
-                ProxyType.SOCKS4: (
-                    cfg["socks4"]["sources"]
-                    if cfg["socks4"]["enabled"]
-                    else None
-                ),
-                ProxyType.SOCKS5: (
-                    cfg["socks5"]["sources"]
-                    if cfg["socks5"]["enabled"]
-                    else None
-                ),
+                ProxyType.HTTP: (cfg["http"]["sources"] if cfg["http"]["enabled"] else None),
+                ProxyType.SOCKS4: (cfg["socks4"]["sources"] if cfg["socks4"]["enabled"] else None),
+                ProxyType.SOCKS5: (cfg["socks5"]["sources"] if cfg["socks5"]["enabled"] else None),
             },
             timeout=cfg["timeout"],
         )
