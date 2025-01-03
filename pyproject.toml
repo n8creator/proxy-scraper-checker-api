@@ -32,6 +32,8 @@ platformdirs = "<5"
 rich = ">=12.3,<14"
 tomli = { version = "<3", python = "<3.11" }
 uvloop = { version = ">=0.14,<0.22", markers = "implementation_name == 'cpython' and (sys_platform == 'darwin' or sys_platform == 'linux')" }
+pydantic = "^2.10.4"
+sqlalchemy = "^2.0.36"
 
 [tool.poetry.dev-dependencies]
 mypy = { version = "1.14", extras = ["faster-cache"] }

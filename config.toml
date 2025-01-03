@@ -1,7 +1,7 @@
 # The number of seconds to wait for a proxied request.
 # The higher the number, the longer the check will take
 # and the more proxies you get.
-timeout = 12
+timeout = 15
 
 # The number of seconds to wait for the proxies to be downloaded from the source.
 source_timeout = 15
@@ -41,6 +41,7 @@ path = "./out"
 
 json = true
 txt = true
+sqlite = true
 
 # If you have sources with a protocol prefix, such as socks5://127.0.0.1:1050, you can add them to any of these sections.
 [http]

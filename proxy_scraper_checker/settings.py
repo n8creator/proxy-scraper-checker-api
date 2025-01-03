@@ -160,6 +160,7 @@ class Settings:
     output_json: bool = attrs.field(validator=attrs.validators.instance_of(bool))
     output_path: Path = attrs.field(converter=Path)
     output_txt: bool = attrs.field(validator=attrs.validators.instance_of(bool))
+    output_sqlite: bool = attrs.field(validator=attrs.validators.instance_of(bool))
     real_ip: str | None = attrs.field(validator=attrs.validators.optional(attrs.validators.instance_of(str)))
     semaphore: asyncio.Semaphore | NullContext = attrs.field(converter=_semaphore_converter)
     sort_by_speed: bool = attrs.field(validator=attrs.validators.instance_of(bool))
@@ -259,6 +260,7 @@ class Settings:
             output_json=cfg["output"]["json"],
             output_path=output_path,
             output_txt=cfg["output"]["txt"],
+            output_sqlite=cfg["output"]["sqlite"],
             real_ip=real_ip,
             semaphore=cfg["max_connections"],
             sort_by_speed=cfg["sort_by_speed"],
