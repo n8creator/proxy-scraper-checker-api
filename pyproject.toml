@@ -34,6 +34,8 @@ tomli = { version = "<3", python = "<3.11" }
 uvloop = { version = ">=0.14,<0.22", markers = "implementation_name == 'cpython' and (sys_platform == 'darwin' or sys_platform == 'linux')" }
 pydantic = "^2.10.4"
 sqlalchemy = "^2.0.36"
+fastapi = "^0.115.6"
+uvicorn = "^0.34.0"
 
 [tool.poetry.dev-dependencies]
 mypy = { version = "1.14", extras = ["faster-cache"] }
@@ -72,6 +74,7 @@ ignore = [
   "A005",
   "ANN401",
   "ASYNC109",
+  "B008",
   "BLE001",
   "C901",
   "COM812",

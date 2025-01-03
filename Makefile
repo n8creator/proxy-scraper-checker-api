@@ -1,4 +1,4 @@
-DIRECTORIES = proxy_scraper_checker/
+DIRECTORIES = proxy_scraper_checker/ api/
 
 # Setup
 install:
@@ -12,8 +12,12 @@ format:
 lint:
 	@poetry run ruff check $(DIRECTORIES) --fix
 
+# Run FastAPI server
+run:
+	@poetry run python -m api.main
+
 # System commands for Makefile
 MAKEFLAGS += --no-print-directory
 
 # System Makefile commands
-.PHONY: install format lint
+.PHONY: install format lint run
