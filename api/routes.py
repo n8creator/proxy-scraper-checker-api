@@ -23,7 +23,7 @@ def get_proxies(db: Connection = Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM proxies")
     proxies = cursor.fetchall()
-    return {"proxies": [dict(proxy) for proxy in proxies], "count": len(proxies)}
+    return {"count": len(proxies), "proxies": [dict(proxy) for proxy in proxies]}
 
 
 @router.get("/proxies/{protocol}")
@@ -31,10 +31,10 @@ def get_proxies_by_protocol(protocol: str, db: Connection = Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM proxies WHERE protocol = ?", (protocol,))
     proxies = cursor.fetchall()
-    return {"proxies": [dict(proxy) for proxy in proxies], "count": len(proxies)}
+    return {"count": len(proxies), "proxies": [dict(proxy) for proxy in proxies]}
 
 
-@router.get("/statistics")
+@router.get("/stats")
 def get_statistics(db: Connection = Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""

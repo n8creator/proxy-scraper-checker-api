@@ -16,8 +16,22 @@ lint:
 run:
 	@poetry run python -m api.main
 
+# Docker Compose commands
+build:
+	docker build --no-cache -t proxy-scraper-api:latest .
+	docker image prune -f
+
+up:
+	docker-compose up -d
+
+down:
+	docker-compose down
+
+logs:
+	docker-compose logs -f
+
 # System commands for Makefile
 MAKEFLAGS += --no-print-directory
 
 # System Makefile commands
-.PHONY: install format lint run
+.PHONY: install format lint run build up down logs
